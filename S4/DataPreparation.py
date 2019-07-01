@@ -3,25 +3,21 @@ import decimal
 import S4.InputOutput as io
 import csv
 from shutil import copy
-
-
-def drange(a, z, jump):
-    '''
-    Allows the creation of a decimal range.
-    Args:
-        a: <float, int> starting point
-        z: <float, int> finishing point
-        jump: <float, int> step size
-    '''
-    while a < z:
-        yield float(a)
-        a += decimal.Decimal(jump)
+import numpy as np
 
 
 def radius_sweep(main_dir,
                  file_name,
                  sim_params):
     '''
+    Loads in a csv file and reads in the simulation parameters using the
+    sim_settings function and the sim_params arg. Loops through the period
+    and thickness parameters and writes the radius files to a csv which it
+    then outputs.
+    Args:
+        main_dir: <string> root path
+        file_name: <string> file name from in-file
+        sim_params: <dictionary> simulation settings dictionary
     '''
     csv_out_path = os.path.join(main_dir, 'Csvs')
     io.check_dir_exists(csv_out_path)
@@ -99,6 +95,14 @@ def thickness_sweep(main_dir,
                     file_name,
                     sim_params):
     '''
+    Loads in a csv file and reads in the simulation parameters using the
+    sim_settings function and the sim_params arg. Loops through the period
+    and radius parameters and writes the thickness files to a csv which it
+    then outputs.
+    Args:
+        main_dir: <string> root path
+        file_name: <string> file name from in-file
+        sim_params: <dictionary> simulation settings dictionary
     '''
     csv_out_path = os.path.join(main_dir, 'Csvs')
     io.check_dir_exists(csv_out_path)
@@ -176,6 +180,14 @@ def period_sweep(main_dir,
                  file_name,
                  sim_params):
     '''
+    Loads in a csv file and reads in the simulation parameters using the
+    sim_settings function and the sim_params arg. Loops through the thickness
+    and radius parameters and writes the period files to a csv which it
+    then outputs.
+    Args:
+        main_dir: <string> root path
+        file_name: <string> file name from in-file
+        sim_params: <dictionary> simulation settings dictionary
     '''
     csv_out_path = os.path.join(main_dir, 'Csvs')
     io.check_dir_exists(csv_out_path)
@@ -216,8 +228,8 @@ def period_sweep(main_dir,
                                        f'{sim_params["Top"][0]}'
                                        f'.txt')
 
-                        wav, trans, refl = io.sim_in(file_string=file_string,
-                                                     main_dir=main_dir)
+                        wav, trans, refl = sim_interp(file_string=file_string,
+                                                      main_dir=main_dir)
 
                         periodss.append(period)
 
@@ -246,3 +258,23 @@ def period_sweep(main_dir,
                 period_vals.append(periodss)
 
     return period_vals
+
+
+def sim_interp(file_string,
+               main_dir):
+    '''
+    '''
+    wav, trans, refl = io.sim_in(file_string=file_string,
+                                 main_dir=main_dir)
+
+    wavelength = np.arange(start=min(wav),
+                           stop=max(wav),
+                           step=0.01)
+    transmission = np.interp(x=wavelength,
+                             xp=wav,
+                             fp=trans)
+    reflection = np.interp(x=wavelength,
+                           xp=wav,
+                           fp=refl)
+
+    return wavelength, transmission, reflection
